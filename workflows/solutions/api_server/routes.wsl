@@ -1,0 +1,17 @@
+const {
+    routes: {
+        // Core endpoints
+        "/health": [{"method": "GET", "workflow": "api_server/endpoints/core/health", "description": "Health check endpoint"},],
+//        "/swagger/swagger.json": [{"method": "FILE", "workflow": "api_server/endpoints/file/", "description": "Validate JWT token"}],
+//        "/workflow/execute": [{"method": "POST", "workflow": "api_server/endpoints/core/workflow_execute", "description": "Execute a workflow with provided parameters"}],
+
+        // Authentication endpoints
+        "/auth/register": [{"method": "POST", "workflow": "api_server/endpoints/auth/register", "description": "Register a new user account"}],
+        "/auth/login": [{"method": "POST", "workflow": "api_server/endpoints/auth/login", "description": "Login with email and password"}],
+        "/auth/request-password-reset": [{"method": "POST", "workflow": "api_server/endpoints/auth/request_password_reset", "description": "Request password reset"}],
+        "/auth/reset-password": [{"method": "POST", "workflow": "api_server/endpoints/auth/reset_password", "description": "Reset user password"}],
+        "/auth/generate-token": [{"method": "POST", "workflow": "api_server/endpoints/auth/generate_token", "description": "Generate JWT token"}],
+        "/auth/validate": [{"method": "POST", "workflow": "api_server/endpoints/auth/validate_jwt", "description": "Validate JWT token"}],
+    }
+}
+

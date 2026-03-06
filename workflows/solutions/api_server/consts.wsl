@@ -1,0 +1,7 @@
+extends routes
+
+const {
+    description: "API Server startup workflow",
+    version: "1.0.0",
+    enabled: true,
+}

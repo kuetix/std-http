@@ -1,0 +1,17 @@
+workflow health {
+  start: CheckHealth
+
+  state CheckHealth {
+    // Return health status
+    action services/common/response.ResponseValue(
+      value: {
+        status: "healthy",
+        service: "kapi",
+        version: $args.version,
+        buildTime: $args.buildTime
+      },
+      statusCode: 200
+    ) as HealthResponse
+    end ok
+  }
+}

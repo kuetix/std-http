@@ -1,0 +1,39 @@
+workflow workflow_execute {
+  start: ValidateRequest
+
+  state ValidateRequest {
+    // Validate that workflow name is provided
+    action services/common/assert.Assert(
+      condition: $args.workflowName != "",
+      message: "Workflow name is required"
+    ) as Validation
+    on success -> ExecuteWorkflow
+    on error -> Failed
+  }
+
+  state ExecuteWorkflow {
+    // Execute the requested workflow
+    action services/common/workflow.ExecuteWorkflow(
+      workflowName: $args.workflowName,
+      args: $args.workflowArgs
+    ) as WorkflowResult
+    on success -> FormatResponse
+    on error -> Failed
+  }
+
+  state FormatResponse {
+    action services/common/response.ResponseValue(
+      value: $WorkflowResult,
+      statusCode: 200
+    ) as Response
+    end ok
+  }
+
+  state Failed {
+    action services/common/response.ResponseValue(
+      value: {error: $error.message},
+      statusCode: 500
+    ) as ErrorResponse
+    end fail
+  }
+}
