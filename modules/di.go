@@ -5,8 +5,8 @@ import (
 	di "github.com/kuetix/container"
 	"github.com/kuetix/engine/pkg/defines"
 	"github.com/kuetix/engine/pkg/workflow"
-	transitionsApiAuth "http/modules/api/auth/transitions"
-	transitionsApiHttp "http/modules/api/http/transitions"
+	transitionsApiAuth "std-http/modules/api/auth/transitions"
+	transitionsApiHttp "std-http/modules/api/http/transitions"
 )
 
 func init() {

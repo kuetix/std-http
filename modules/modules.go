@@ -1,8 +1,8 @@
 package modules
 
 import (
-	_ "http/modules/api/auth/transitions"
-	_ "http/modules/api/http/transitions"
+	_ "std-http/modules/api/auth/transitions"
+	_ "std-http/modules/api/http/transitions"
 
 	di "github.com/kuetix/container"
 )

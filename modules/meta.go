@@ -10,24 +10,6 @@ func init() {
 	boot.AddMetaFunctionCache(map[string]map[string]map[string]interfaces.FunctionMetadata{
 		"api/auth": {
 			"jwt": {
-				"GenerateToken": {
-					Name:        "GenerateToken",
-					NumIn:       4,
-					NumOut:      1,
-					ArgTypes:    []string{"string", "string", "string", "int"},
-					ReturnTypes: []string{"domain.FlowStepResult"},
-					ArgNames:    []string{"userID", "username", "email", "expiresInHours"},
-					ReturnNames: []string{"r"},
-				},
-				"ValidateToken": {
-					Name:        "ValidateToken",
-					NumIn:       1,
-					NumOut:      1,
-					ArgTypes:    []string{"string"},
-					ReturnTypes: []string{"domain.FlowStepResult"},
-					ArgNames:    []string{"tokenString"},
-					ReturnNames: []string{"r"},
-				},
 				"RefreshToken": {
 					Name:        "RefreshToken",
 					NumIn:       2,
@@ -46,17 +28,26 @@ func init() {
 					ArgNames:    []string{"authHeader"},
 					ReturnNames: []string{"r"},
 				},
-			},
-			"user": {
-				"ResetPassword": {
-					Name:        "ResetPassword",
-					NumIn:       3,
+				"GenerateToken": {
+					Name:        "GenerateToken",
+					NumIn:       4,
 					NumOut:      1,
-					ArgTypes:    []string{"string", "string", "string"},
+					ArgTypes:    []string{"string", "string", "string", "int"},
 					ReturnTypes: []string{"domain.FlowStepResult"},
-					ArgNames:    []string{"email", "newPassword", "requestingUserEmail"},
+					ArgNames:    []string{"userID", "username", "email", "expiresInHours"},
 					ReturnNames: []string{"r"},
 				},
+				"ValidateToken": {
+					Name:        "ValidateToken",
+					NumIn:       1,
+					NumOut:      1,
+					ArgTypes:    []string{"string"},
+					ReturnTypes: []string{"domain.FlowStepResult"},
+					ArgNames:    []string{"tokenString"},
+					ReturnNames: []string{"r"},
+				},
+			},
+			"user": {
 				"RequestPasswordReset": {
 					Name:        "RequestPasswordReset",
 					NumIn:       1,
@@ -102,19 +93,19 @@ func init() {
 					ArgNames:    []string{},
 					ReturnNames: []string{"r"},
 				},
+				"ResetPassword": {
+					Name:        "ResetPassword",
+					NumIn:       3,
+					NumOut:      1,
+					ArgTypes:    []string{"string", "string", "string"},
+					ReturnTypes: []string{"domain.FlowStepResult"},
+					ArgNames:    []string{"email", "newPassword", "requestingUserEmail"},
+					ReturnNames: []string{"r"},
+				},
 			},
 		},
 		"api/http": {
 			"http": {
-				"WorkflowExecutor": {
-					Name:        "WorkflowExecutor",
-					NumIn:       3,
-					NumOut:      1,
-					ArgTypes:    []string{"string", "http.ResponseWriter", "*http.Request"},
-					ReturnTypes: []string{"domain.FlowStepResult"},
-					ArgNames:    []string{"workflowPath", "w", "r"},
-					ReturnNames: []string{"result"},
-				},
 				"SetupCORS": {
 					Name:        "SetupCORS",
 					NumIn:       0,
@@ -150,6 +141,15 @@ func init() {
 					ReturnTypes: []string{},
 					ArgNames:    []string{"w", "r", "path", "contentType", "cacheControl"},
 					ReturnNames: []string{},
+				},
+				"WorkflowExecutor": {
+					Name:        "WorkflowExecutor",
+					NumIn:       3,
+					NumOut:      1,
+					ArgTypes:    []string{"string", "http.ResponseWriter", "*http.Request"},
+					ReturnTypes: []string{"domain.FlowStepResult"},
+					ArgNames:    []string{"workflowPath", "w", "r"},
+					ReturnNames: []string{"result"},
 				},
 			},
 		},
