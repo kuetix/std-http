@@ -8,7 +8,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"std-http/internal"
+	"github.com/kuetix/std-http/internal"
 
 	"github.com/kuetix/engine/pkg/domain"
 	"github.com/kuetix/engine/pkg/domain/interfaces"

@@ -1,4 +1,4 @@
-module std-http
+module github.com/kuetix/std-http
 
 go 1.25.1
 
@@ -6,6 +6,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/kuetix/container v0.1.0
 	github.com/kuetix/engine v0.2.4
+	github.com/kuetix/std-core v0.1.0
 	github.com/kuetix/uuid v0.1.0
 	github.com/pnkj-kmr/simple-json-db v1.3.0
 	github.com/rs/cors v1.11.1
@@ -36,3 +37,5 @@ require (
 replace http => .
 
 replace github.com/kuetix/engine => ../../engine
+
+replace github.com/kuetix/std-core => ../../packages/core

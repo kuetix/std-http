@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"std-http/modules"
+	stdCoreModules "github.com/kuetix/std-core/modules"
+	stdHttpModules "github.com/kuetix/std-http/modules"
 
 	"github.com/kuetix/engine"
 	"github.com/kuetix/engine/boot"
@@ -29,7 +30,8 @@ func main() {
 	flag.Parse()
 
 	engineModule.Enable()
-	modules.Enable()
+	stdCoreModules.Enable()
+	stdHttpModules.Enable()
 
 	verboseMode := *verbose || *vFlag
 
