@@ -16,6 +16,14 @@ import (
 	"github.com/rs/cors"
 )
 
+type httpTransitions struct {
+	workflow.BaseServiceTransition
+	modulesPath   string
+	workflowsPath string
+	version       string
+	buildTime     string
+}
+
 func NewHTTPTransitions() interfaces.ServiceTransitions {
 	return &httpTransitions{}
 }
@@ -119,6 +127,17 @@ func (h *httpTransitions) WorkflowExecutor(workflowPath string, w http.ResponseW
 	if ok {
 		response = responseRef
 	}
+	if response == nil {
+		ok = false
+		for _, resp := range responses {
+			responseRef = resp
+			ok = true
+			break
+		}
+	}
+	if ok {
+		response = responseRef
+	}
 
 	// Check if workflow execution was successful
 	if response == nil || !response.IsSuccess() {
@@ -138,7 +157,7 @@ func (h *httpTransitions) WorkflowExecutor(workflowPath string, w http.ResponseW
 		if fileResponse, ok := response.Response.(FileResponse); ok {
 			result.Success = true
 			result.Response = response.Response
-			h.ServeFile(w, r, fileResponse.Path, fileResponse.ContentType, fileResponse.CacheControl)
+			respondFile(w, r, fileResponse.Path, fileResponse.ContentType, fileResponse.CacheControl)
 			return
 		}
 
@@ -154,20 +173,6 @@ func (h *httpTransitions) WorkflowExecutor(workflowPath string, w http.ResponseW
 	result.Success = true
 	result.Response = response.Response
 	return
-}
-
-// RouteConfigGroup defines a group of related routes (e.g., all marketplace endpoints)
-type RouteConfigGroup struct {
-	Path   string
-	Routes []RouteConfig
-}
-
-// RouteConfig Route configuration structure
-type RouteConfig struct {
-	Path         string
-	Method       string
-	WorkflowPath string
-	Description  string
 }
 
 // SetupCORS returns a CORS handler
@@ -268,7 +273,9 @@ func (h *httpTransitions) StartServer(port string) (result domain.FlowStepResult
 	return
 }
 
-// ServeFile serves a file with appropriate content type and caching headers
-func (h *httpTransitions) ServeFile(w http.ResponseWriter, r *http.Request, path string, contentType string, cacheControl string) {
-	respondFile(w, r, path, contentType, cacheControl)
+// AFileResponse creates a response that serves a file with the specified content type and cache control
+func (h *httpTransitions) AFileResponse(path, contentType, cacheControl string) (result domain.FlowStepResult) {
+	result.Success = true
+	result.Response = FileResponse{Path: path, ContentType: contentType, CacheControl: cacheControl}
+	return
 }

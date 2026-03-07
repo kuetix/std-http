@@ -1,15 +1,17 @@
 package transitions
 
-import (
-	"github.com/kuetix/engine/pkg/workflow"
-)
+// RouteConfigGroup defines a group of related routes (e.g., all marketplace endpoints)
+type RouteConfigGroup struct {
+	Path   string
+	Routes []RouteConfig
+}
 
-type httpTransitions struct {
-	workflow.BaseServiceTransition
-	modulesPath   string
-	workflowsPath string
-	version       string
-	buildTime     string
+// RouteConfig Route configuration structure
+type RouteConfig struct {
+	Path         string
+	Method       string
+	WorkflowPath string
+	Description  string
 }
 
 // WorkflowRequest represents a workflow execution request
