@@ -40,7 +40,7 @@ workflow register {
   }
 
   state FormatResponse {
-    action services/common/response.ResponseValue(
+    action services/common/response.Response(
       value: {
         token: $TokenResult.response.token,
         expiresAt: $TokenResult.response.expiresAt,
@@ -54,7 +54,7 @@ workflow register {
   }
 
   state ValidationFailed {
-    action services/common/response.ResponseValue(
+    action services/common/response.Response(
       value: {error: $error.message},
       statusCode: 400
     ) as ErrorResponse
@@ -62,7 +62,7 @@ workflow register {
   }
 
   state RegistrationFailed {
-    action services/common/response.ResponseValue(
+    action services/common/response.Response(
       value: {error: $error.message},
       statusCode: 409
     ) as ErrorResponse
@@ -70,7 +70,7 @@ workflow register {
   }
 
   state Failed {
-    action services/common/response.ResponseValue(
+    action services/common/response.Response(
       value: {error: $error.message},
       statusCode: 500
     ) as ErrorResponse

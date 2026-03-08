@@ -22,7 +22,7 @@ workflow workflow_execute {
   }
 
   state FormatResponse {
-    action services/common/response.ResponseValue(
+    action services/common/response.Response(
       value: $WorkflowResult,
       statusCode: 200
     ) as Response
@@ -30,7 +30,7 @@ workflow workflow_execute {
   }
 
   state Failed {
-    action services/common/response.ResponseValue(
+    action services/common/response.Response(
       value: {error: $error.message},
       statusCode: 500
     ) as ErrorResponse

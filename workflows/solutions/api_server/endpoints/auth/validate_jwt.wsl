@@ -18,7 +18,7 @@ workflow validate_jwt {
   }
 
   state FormatResponse {
-    action services/common/response.ResponseValue(
+    action services/common/response.Response(
       value: $UserInfo.response,
       statusCode: 200
     ) as Response
@@ -26,7 +26,7 @@ workflow validate_jwt {
   }
 
   state Failed {
-    action services/common/response.ResponseValue(
+    action services/common/response.Response(
       value: {error: $error.message, authorized: false},
       statusCode: 401
     ) as ErrorResponse

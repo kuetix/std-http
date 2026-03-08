@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/kuetix/engine"
@@ -141,12 +142,24 @@ func (h *httpTransitions) WorkflowExecutor(workflowPath string, w http.ResponseW
 
 	// Check if workflow execution was successful
 	if response == nil || !response.IsSuccess() {
-		errorMsg := "Workflow execution failed"
+		result.StatusCode = http.StatusInternalServerError
+		var errorMessages []string = make([]string, 0)
 		if response != nil && response.Error != nil {
-			errorMsg = response.Error.Error()
+			result.StatusCode = response.StatusCode
+			issues := response.Error.Errors()
+			for _, issue := range issues {
+				s := issue.Error()
+				if strings.Contains(s, " trace: ") && h.Ctx.Engine.GetApplication().Env.Config.Application.Debug != true {
+					continue
+				}
+				errorMessages = append(errorMessages, s)
+			}
 			result.Error = response.Error
 		}
-		respondError(w, errorMsg, http.StatusInternalServerError)
+		if len(errorMessages) == 0 {
+			errorMessages = append(errorMessages, "Workflow execution failed with unknown error")
+		}
+		respondErrors(w, errorMessages, result.StatusCode)
 		result.Success = false
 		return
 	}

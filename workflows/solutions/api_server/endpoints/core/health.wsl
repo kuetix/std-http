@@ -3,7 +3,7 @@ workflow health {
 
   state CheckHealth {
     // Return health status
-    action services/common/response.ResponseValue(
+    action services/common/response.Response(
       value: {
         status: "healthy",
         service: "kapi",

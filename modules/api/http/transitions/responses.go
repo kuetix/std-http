@@ -13,6 +13,7 @@ func respondJson(w http.ResponseWriter, sr StandardResponse, headers map[string]
 		w.Header().Set(k, v)
 	}
 
+	w.WriteHeader(statusCode)
 	err = json.NewEncoder(w).Encode(sr)
 	if err != nil {
 		errorMessage := err.Error()
@@ -72,5 +73,12 @@ func respondError(w http.ResponseWriter, message string, statusCode int) {
 	respondJson(w, StandardResponse{
 		Success: false,
 		Error:   message,
+	}, nil, statusCode)
+}
+
+func respondErrors(w http.ResponseWriter, messages []string, statusCode int) {
+	respondJson(w, StandardResponse{
+		Success: false,
+		Errors:  messages,
 	}, nil, statusCode)
 }
