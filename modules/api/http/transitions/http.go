@@ -193,7 +193,7 @@ func (h *httpTransitions) SetupCORS() (r domain.FlowStepResult) {
 	c := cors.New(cors.Options{
 		// AllowOrigins: []string{url},
 		AllowedOrigins:   []string{"http://localhost:5173"},
-		AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Origin", "Content-Type", "Authorization", "sentry-trace", "baggage", "X-Requested-With", "Accept"},
 		ExposedHeaders:   []string{"Content-Length"},
 		AllowCredentials: true,
