@@ -27,11 +27,33 @@ func NewUserTransitions() interfaces.ServiceTransitions {
 	return &userTransitions{}
 }
 
+//goland:noinspection GoUnusedConst
+const (
+	UserTypeSimple          = "simple"
+	UserTypeSaml            = "saml"
+	UserTypeSso             = "sso"
+	UserTypeOauth           = "oauth"
+	UserTypeLdap            = "ldap"
+	UserTypeActiveDirectory = "active_directory"
+	UserTypeApiKey          = "api_key"
+	UserTypeMagicLink       = "magic_link"
+	UserTypeSocial          = "social"
+	UserTypeFacebook        = "facebook"
+	UserTypeGoogle          = "google"
+	UserTypeApple           = "apple"
+	UserTypeGithub          = "github"
+	UserTypePlain           = "plain"
+	UserTypeUnknown         = "unknown"
+	UserTypeCustom          = "custom"
+)
+
 // User represents a user account in the system
 type User struct {
 	ID           string `json:"id"`
 	Email        string `json:"email"`
 	PasswordHash string `json:"passwordHash"`
+	Locked       bool   `json:"locked"`
+	Type         string `json:"type"`
 	CreatedAt    string `json:"createdAt"`
 	UpdatedAt    string `json:"updatedAt"`
 }
@@ -105,7 +127,7 @@ func (u *userTransitions) Register(email, password string) (r domain.FlowStepRes
 		return
 	}
 
-	// Check if user already exists
+	// Check if a user already exists
 	userID := uuid.Id(email)
 	if db.Exists(userID) {
 		r.Success = false
@@ -129,12 +151,14 @@ func (u *userTransitions) Register(email, password string) (r domain.FlowStepRes
 		ID:           userID,
 		Email:        email,
 		PasswordHash: passwordHash,
+		Locked:       false,
+		Type:         UserTypeSimple,
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}
 
-	// Save user to database with email as key for easy lookup
-	if err := db.Set(userID, user); err != nil {
+	// Save a user to a database with email as a key for easy lookup
+	if err = db.Set(userID, user); err != nil {
 		r.Success = false
 		r.Error = fmt.Errorf("failed to save user: %w", err)
 		return
@@ -164,14 +188,14 @@ func (u *userTransitions) Login(email, password string) (r domain.FlowStepResult
 	// Look up user by email
 	emailKey := uuid.Id(email)
 	var user User
-	if err := db.Get(emailKey, &user); err != nil {
+	if err = db.Get(emailKey, &user); err != nil {
 		r.Success = false
 		r.Error = fmt.Errorf("invalid email or password")
 		return
 	}
 
 	// Verify password
-	if err := checkPassword(password, user.PasswordHash); err != nil {
+	if err = checkPassword(password, user.PasswordHash); err != nil {
 		r.Success = false
 		r.Error = fmt.Errorf("invalid email or password")
 		return

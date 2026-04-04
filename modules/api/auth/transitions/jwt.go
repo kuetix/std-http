@@ -27,6 +27,16 @@ type JWTClaims struct {
 	jwt.RegisteredClaims
 }
 
+type Token struct {
+	UserID    string `json:"userId"`
+	Username  string `json:"username"`
+	Email     string `json:"email"`
+	Raw       string `json:"raw"`
+	IssuedAt  string `json:"issuedAt"`
+	ExpiresAt string `json:"expiresAt"`
+	jwt.RegisteredClaims
+}
+
 // getJWTSecret returns the JWT secret from environment or a default value
 func getJWTSecret() string {
 	secret := os.Getenv("JWT_SECRET")
@@ -107,6 +117,14 @@ func (j *jwtTransitions) ValidateToken(tokenString string) (r domain.FlowStepRes
 
 	r.Success = true
 	r.Response = map[string]interface{}{
+		"token": Token{
+			Raw:       tokenString,
+			UserID:    claims.UserID,
+			Username:  claims.Username,
+			Email:     claims.Email,
+			IssuedAt:  claims.IssuedAt.Time.Format(time.RFC3339),
+			ExpiresAt: claims.ExpiresAt.Time.Format(time.RFC3339),
+		},
 		"userId":    claims.UserID,
 		"username":  claims.Username,
 		"email":     claims.Email,
@@ -169,5 +187,26 @@ func (j *jwtTransitions) ExtractTokenFromHeader(authHeader string) (r domain.Flo
 	r.Response = map[string]interface{}{
 		"token": token,
 	}
+	return
+}
+
+// GetToken validates the token extracted from the Authorization header
+func (j *jwtTransitions) GetToken(authHeader string) (r domain.FlowStepResult) {
+	r = j.ExtractTokenFromHeader(authHeader)
+	if !r.Success {
+		return
+	}
+
+	token := r.Response.(map[string]interface{})["token"].(string)
+	validateToken := j.ValidateToken(token)
+	if !validateToken.Success {
+		r.Success = false
+		r.Error = validateToken.Error
+		r.Response = nil
+		return
+	}
+
+	r.Response = validateToken.Response.(map[string]interface{})["token"].(Token)
+	r.Success = true
 	return
 }

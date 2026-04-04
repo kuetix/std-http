@@ -18,6 +18,11 @@
         "description": "Function with 4 input(s) and 1 output(s)"
       },
       {
+        "value": "GetToken",
+        "label": "GetToken(authHeader)",
+        "description": "Function with 1 input(s) and 1 output(s)"
+      },
+      {
         "value": "GenerateToken",
         "label": "GenerateToken(userID, username, email, expiresInHours)",
         "description": "Function with 4 input(s) and 1 output(s)"
@@ -35,6 +40,11 @@
       {
         "value": "ExtractTokenFromHeader",
         "label": "ExtractTokenFromHeader(authHeader)",
+        "description": "Function with 1 input(s) and 1 output(s)"
+      },
+      {
+        "value": "GetToken",
+        "label": "GetToken(authHeader)",
         "description": "Function with 1 input(s) and 1 output(s)"
       },
       {

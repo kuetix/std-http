@@ -251,7 +251,8 @@ func (h *httpTransitions) RegisterRoutes(modulesPath, workflowsPath, version, bu
 	for path, routes := range groups {
 		for _, route := range routes.([]interface{}) {
 			workflowName := route.(map[string]interface{})["workflow"].(string)
-			f, err := h.Ctx.Engine.GetWorkflowFilePath(workflowName)
+			workflowNamePath := filepath.Join(workflowsPath, workflowName)
+			f, err := h.Ctx.Engine.GetWorkflowFilePath(workflowNamePath)
 			if err != nil {
 				fmt.Println("Failed to get workflow file path:", err)
 				return
