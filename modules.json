@@ -79,7 +79,12 @@
       },
       {
         "value": "Login",
-        "label": "Login(email, password)",
+        "label": "Login(login, password)",
+        "description": "Function with 2 input(s) and 1 output(s)"
+      },
+      {
+        "value": "LookupID",
+        "label": "LookupID(key, email)",
         "description": "Function with 2 input(s) and 1 output(s)"
       },
       {
@@ -88,8 +93,18 @@
         "description": "Function with 2 input(s) and 1 output(s)"
       },
       {
+        "value": "UpdateIndex",
+        "label": "UpdateIndex(email, otherId)",
+        "description": "Function with 2 input(s) and 1 output(s)"
+      },
+      {
+        "value": "LookupID",
+        "label": "LookupID(key, email)",
+        "description": "Function with 2 input(s) and 1 output(s)"
+      },
+      {
         "value": "Login",
-        "label": "Login(email, password)",
+        "label": "Login(login, password)",
         "description": "Function with 2 input(s) and 1 output(s)"
       },
       {
@@ -126,6 +141,11 @@
         "value": "ResetPassword",
         "label": "ResetPassword(email, newPassword, requestingUserEmail)",
         "description": "Function with 3 input(s) and 1 output(s)"
+      },
+      {
+        "value": "UpdateIndex",
+        "label": "UpdateIndex(email, otherId)",
+        "description": "Function with 2 input(s) and 1 output(s)"
       }
     ]
   },

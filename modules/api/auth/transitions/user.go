@@ -8,7 +8,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/kuetix/std-http/internal"
+	jsonDbCache "github.com/anare/simple-json-db-cache"
 
 	"github.com/kuetix/engine/pkg/domain"
 	"github.com/kuetix/engine/pkg/domain/interfaces"
@@ -19,8 +19,9 @@ import (
 
 type userTransitions struct {
 	workflow.BaseServiceTransition
-	colDb *internal.DB
-	db    *internal.Collection
+	dbm   *jsonDbCache.DB
+	db    *jsonDbCache.Collection
+	index *jsonDbCache.Collection
 }
 
 func NewUserTransitions() interfaces.ServiceTransitions {
@@ -58,6 +59,14 @@ type User struct {
 	UpdatedAt    string `json:"updatedAt"`
 }
 
+// Index represents a user index for quick lookups by email (or other identifiers)
+type Index struct {
+	ID        string `json:"id"`
+	UserID    string `json:"userId"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+}
+
 // PasswordResetToken represents a password reset request
 type PasswordResetToken struct {
 	Email     string `json:"email"`
@@ -67,7 +76,7 @@ type PasswordResetToken struct {
 }
 
 // getDB initializes and returns the database connection
-func (u *userTransitions) getDB() (*internal.Collection, error) {
+func (u *userTransitions) getDB() (*jsonDbCache.Collection, error) {
 	if u.db != nil {
 		return u.db, nil
 	}
@@ -86,13 +95,14 @@ func (u *userTransitions) getDB() (*internal.Collection, error) {
 	}
 
 	dbFile := filepath.Join(dbPath, "users")
-	db, err := internal.NewDB(dbFile)
+	db, err := jsonDbCache.NewDB(dbFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize database: %w", err)
 	}
 
-	u.colDb = db
-	u.db = internal.NewCollection(db, "users")
+	u.dbm = db
+	u.db = u.dbm.NewCollection("users")
+	u.index = u.dbm.NewCollection("index")
 	return u.db, nil
 }
 
@@ -146,7 +156,7 @@ func (u *userTransitions) Register(email, password string) (r domain.FlowStepRes
 	// Generate user ID
 	now := time.Now().Format(time.RFC3339)
 
-	// Create new user
+	// Create a new user
 	user := User{
 		ID:           userID,
 		Email:        email,
@@ -164,6 +174,20 @@ func (u *userTransitions) Register(email, password string) (r domain.FlowStepRes
 		return
 	}
 
+	idb := u.index
+	index := Index{
+		UserID:    userID,
+		ID:        userID,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	// Save a user to a database with email as a key for easy lookup
+	if err = idb.Set(userID, index); err != nil {
+		r.Success = false
+		r.Error = fmt.Errorf("failed to save user: %w", err)
+		return
+	}
+
 	r.Success = true
 	r.Response = map[string]interface{}{
 		"userId":    userID,
@@ -175,8 +199,70 @@ func (u *userTransitions) Register(email, password string) (r domain.FlowStepRes
 	return
 }
 
-// Login validates user credentials and returns user information
-func (u *userTransitions) Login(email, password string) (r domain.FlowStepResult) {
+// UpdateIndex updates the user index with email and other identifier (e.g., for SSO users) to allow quick lookups
+func (u *userTransitions) UpdateIndex(email, otherId string) (r domain.FlowStepResult) {
+	// Get database connection
+	_, err := u.getDB()
+	if err != nil {
+		r.Success = false
+		r.Error = err
+		return
+	}
+
+	idb := u.index
+
+	now := time.Now().Format(time.RFC3339)
+
+	// Check if a user already exists
+	emailHash := uuid.Id(email)
+	otherIdHash := uuid.Id(otherId)
+
+	index := Index{
+		ID:        emailHash,
+		UserID:    otherIdHash,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	found := false
+	userHash := emailHash
+	if idb.Exists(userHash) {
+		found = true
+	} else {
+		userHash = otherIdHash
+		if idb.Exists(userHash) {
+			found = true
+		}
+	}
+
+	if found {
+		err = idb.Get(userHash, &index)
+		if err == nil {
+			index.UpdatedAt = now
+			index.UserID = userHash
+		}
+	}
+
+	// Save a user to a database with email as a key for easy lookup
+	if err = idb.Set(userHash, index); err != nil {
+		r.Success = false
+		r.Error = fmt.Errorf("failed to save user: %w", err)
+		return
+	}
+
+	r.Success = true
+	r.Response = map[string]interface{}{
+		"id":        index.ID,
+		"userId":    index.UserID,
+		"createdAt": index.CreatedAt,
+		"updatedAt": index.UpdatedAt,
+		"message":   "Index updated successfully",
+	}
+
+	return
+}
+
+// LookupID looks up a user ID by email or other identifier using the index for quick retrieval
+func (u *userTransitions) LookupID(key, email string) (r domain.FlowStepResult) {
 	// Get database connection
 	db, err := u.getDB()
 	if err != nil {
@@ -185,13 +271,51 @@ func (u *userTransitions) Login(email, password string) (r domain.FlowStepResult
 		return
 	}
 
-	// Look up user by email
-	emailKey := uuid.Id(email)
-	var user User
-	if err = db.Get(emailKey, &user); err != nil {
+	idb := u.index
+	keyHash := uuid.Id(key)
+	emailHash := uuid.Id(email)
+	index := Index{}
+	if err = idb.Get(keyHash, &index); err != nil {
+		if err = idb.Get(emailHash, &index); err != nil {
+			if !db.Exists(emailHash) {
+				r.Success = false
+				r.Error = fmt.Errorf("invalid email or password")
+				return
+			}
+			index.ID = emailHash
+		}
+	}
+
+	r.Success = true
+	r.Response = map[string]interface{}{
+		"id":        index.ID,
+		"userId":    index.UserID,
+		"createdAt": index.CreatedAt,
+		"updatedAt": index.UpdatedAt,
+	}
+	return
+}
+
+// Login validates user credentials and returns user information
+func (u *userTransitions) Login(login, password string) (r domain.FlowStepResult) {
+	// Get database connection
+	db, err := u.getDB()
+	if err != nil {
 		r.Success = false
-		r.Error = fmt.Errorf("invalid email or password")
+		r.Error = err
 		return
+	}
+
+	// Look up the user by email
+	// login := uuid.Id(email)
+	var user User
+	if err = db.Get(login, &user); err != nil {
+		login = uuid.Id(login)
+		if err = db.Get(login, &user); err != nil {
+			r.Success = false
+			r.Error = fmt.Errorf("invalid email or password")
+			return
+		}
 	}
 
 	// Verify password
