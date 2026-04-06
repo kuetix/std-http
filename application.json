@@ -1,9 +1,0 @@
-{
-  "name": "http",
-  "type": "package",
-  "description": "Kuetix Engine application: http",
-  "version": "0.1.0",
-  "engine": "v0.1.4",
-  "created_at": "2026-03-01T23:57:35.667743+01:00",
-  "updated_at": "2026-03-01T23:57:35.667743+01:00"
-}

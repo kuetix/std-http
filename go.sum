@@ -1,5 +1,5 @@
-github.com/anare/simple-json-db-cache v0.0.0-20260404221628-68d155712870 h1:wKnCu6RtlT7i3x+RNx7HTnXHn6uAk55frdN/8tAFE5c=
-github.com/anare/simple-json-db-cache v0.0.0-20260404221628-68d155712870/go.mod h1:IHMeb7c3ivhr4lS4MZS8wBKWP8LJAY6YxYCTdspmtXQ=
+github.com/anare/filejsondb v1.0.0 h1:bOLxuXBT6345lZMKHq0b6Ri140TUxkXRDCmByAEREC4=
+github.com/anare/filejsondb v1.0.0/go.mod h1:Q6Pt2al9UTVur+IB/zPfuzJdIyC1bsYRzzBPmTM65qU=
 github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef h1:2JGTg6JapxP9/R33ZaagQtAM4EkkSYnIAlOG5EI8gkM=
 github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef/go.mod h1:JS7hed4L1fj0hXcyEejnW57/7LCetXggd+vwrRnYeII=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

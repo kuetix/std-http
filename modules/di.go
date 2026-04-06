@@ -5,20 +5,11 @@ import (
 	di "github.com/kuetix/container"
 	"github.com/kuetix/engine/pkg/defines"
 	"github.com/kuetix/engine/pkg/workflow"
-	transitionsApiAuth "github.com/kuetix/std-http/modules/api/auth/transitions"
 	transitionsApiHttp "github.com/kuetix/std-http/modules/api/http/transitions"
 )
 
 func init() {
 	di.Boot()
-	di.DependencyInjection["api/auth"] = func(name string) {
-		di.ToResolve(defines.TransitionPrefix+"api/auth"+"/"+"jwt", func() interface{} {
-			return workflow.ServiceTransitionMapping{ServiceName: name, Name: "jwt", Impl: transitionsApiAuth.NewJWTTransitions()}
-		})
-		di.ToResolve(defines.TransitionPrefix+"api/auth"+"/"+"user", func() interface{} {
-			return workflow.ServiceTransitionMapping{ServiceName: name, Name: "user", Impl: transitionsApiAuth.NewUserTransitions()}
-		})
-	}
 	di.DependencyInjection["api/http"] = func(name string) {
 		di.ToResolve(defines.TransitionPrefix+"api/http"+"/"+"http", func() interface{} {
 			return workflow.ServiceTransitionMapping{ServiceName: name, Name: "http", Impl: transitionsApiHttp.NewHTTPTransitions()}

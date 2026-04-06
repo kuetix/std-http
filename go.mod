@@ -3,7 +3,7 @@ module github.com/kuetix/std-http
 go 1.26.1
 
 require (
-	github.com/anare/simple-json-db-cache v0.0.0-20260404221628-68d155712870
+	github.com/anare/filejsondb v1.0.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/kuetix/container v0.1.0
 	github.com/kuetix/engine v0.2.4
