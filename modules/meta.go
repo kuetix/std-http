@@ -3,13 +3,22 @@ package modules
 
 import (
 	"github.com/kuetix/engine/boot"
-	"github.com/kuetix/engine/pkg/domain/interfaces"
+	"github.com/kuetix/engine/engine/domain/interfaces"
 )
 
 func init() {
 	boot.AddMetaFunctionCache(map[string]map[string]map[string]interfaces.FunctionMetadata{
 		"api/http": {
 			"http": {
+				"StartServer": {
+					Name:        "StartServer",
+					NumIn:       1,
+					NumOut:      1,
+					ArgTypes:    []string{"string"},
+					ReturnTypes: []string{"domain.FlowStepResult"},
+					ArgNames:    []string{"port"},
+					ReturnNames: []string{"result"},
+				},
 				"AFileResponse": {
 					Name:        "AFileResponse",
 					NumIn:       3,
@@ -44,15 +53,6 @@ func init() {
 					ArgTypes:    []string{"string", "string", "string", "string", "map[string]interface{}"},
 					ReturnTypes: []string{"domain.FlowStepResult"},
 					ArgNames:    []string{"modulesPath", "workflowsPath", "version", "buildTime", "groups"},
-					ReturnNames: []string{"result"},
-				},
-				"StartServer": {
-					Name:        "StartServer",
-					NumIn:       1,
-					NumOut:      1,
-					ArgTypes:    []string{"string"},
-					ReturnTypes: []string{"domain.FlowStepResult"},
-					ArgNames:    []string{"port"},
 					ReturnNames: []string{"result"},
 				},
 			},

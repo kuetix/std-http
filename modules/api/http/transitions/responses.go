@@ -14,10 +14,12 @@ func respondJson(w http.ResponseWriter, sr StandardResponse, headers map[string]
 	}
 
 	w.WriteHeader(statusCode)
-	err = json.NewEncoder(w).Encode(sr)
+	encoder := json.NewEncoder(w)
+	encoder.SetEscapeHTML(false)
+	err = encoder.Encode(sr)
 	if err != nil {
 		errorMessage := err.Error()
-		err = json.NewEncoder(w).Encode(StandardResponse{
+		err = encoder.Encode(StandardResponse{
 			Success: false,
 			Error:   errorMessage,
 		})

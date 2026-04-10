@@ -3,8 +3,8 @@ package modules
 
 import (
 	di "github.com/kuetix/container"
-	"github.com/kuetix/engine/pkg/defines"
-	"github.com/kuetix/engine/pkg/workflow"
+	"github.com/kuetix/engine/engine/defines"
+	"github.com/kuetix/engine/engine/workflow"
 	transitionsApiHttp "github.com/kuetix/std-http/modules/api/http/transitions"
 )
 

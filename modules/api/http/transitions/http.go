@@ -10,10 +10,9 @@ import (
 	"time"
 
 	"github.com/kuetix/engine"
-	"github.com/kuetix/engine/boot"
-	"github.com/kuetix/engine/pkg/domain"
-	"github.com/kuetix/engine/pkg/domain/interfaces"
-	"github.com/kuetix/engine/pkg/workflow"
+	"github.com/kuetix/engine/engine/domain"
+	"github.com/kuetix/engine/engine/domain/interfaces"
+	"github.com/kuetix/engine/engine/workflow"
 	"github.com/rs/cors"
 )
 
@@ -99,7 +98,7 @@ func (h *httpTransitions) WorkflowExecutor(workflowPath string, w http.ResponseW
 
 	// Execute the workflow
 	workflowPath = filepath.Join(h.workflowsPath, workflowPath)
-	responses := engine.RunWorkflow(&boot.Options{
+	responses := engine.RunWorkflow("production", &domain.Options{
 		EngineName:    "kapi-api",
 		ConfigName:    "http",
 		Verbose:       options.Verbose,
