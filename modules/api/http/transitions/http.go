@@ -68,6 +68,11 @@ func (h *httpTransitions) WorkflowExecutor(workflowPath string, w http.ResponseW
 			"bodyData": nil,
 		},
 	}
+
+	for key, value := range options.Context {
+		context[key] = value
+	}
+
 	// Parse JSON body for POST/PUT requests
 	if r.Method == http.MethodPost || r.Method == http.MethodPut {
 		body, err := io.ReadAll(r.Body)
