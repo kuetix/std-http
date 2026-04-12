@@ -1,7 +1,20 @@
 const {
     routes: {
         // Core endpoints
-        "/health": [{"method": "GET", "workflow": "api_server/endpoints/core/health", "description": "Health check endpoint"},],
+        "/health": [
+            {
+                "method": "GET",
+                "workflow": "@solutions/api_server/endpoints/core/health",
+                "description": "GET Health check endpoint",
+                "require": {"qs": ["message"], "headers": ["Authorization"]}
+            },
+            {
+                "method": "POST",
+                "workflow": "@solutions/api_server/endpoints/core/health",
+                "description": "POST Health check endpoint",
+                "require": {"json": ["message"], "headers": ["Authorization"]}
+            },
+        ],
     }
 }
 

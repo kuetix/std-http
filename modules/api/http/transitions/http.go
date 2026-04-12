@@ -29,7 +29,7 @@ func NewHTTPTransitions() interfaces.ServiceTransitions {
 }
 
 // WorkflowExecutor executes a WSL workflow for an HTTP request
-func (h *httpTransitions) WorkflowExecutor(workflowPath string, w http.ResponseWriter, r *http.Request) (result domain.FlowStepResult) {
+func (h *httpTransitions) WorkflowExecutor(workflowPath string, w http.ResponseWriter, r *http.Request, route map[string]interface{}) (result domain.FlowStepResult) {
 	options := h.Ctx.Engine.GetApplication().Env.Options
 
 	// Parse request into workflow arguments
@@ -41,18 +41,28 @@ func (h *httpTransitions) WorkflowExecutor(workflowPath string, w http.ResponseW
 		fmt.Sprintf("buildTime=%s", h.buildTime),
 	}
 
-	// Parse query parameters
-	query := r.URL.Query()
-	for key, values := range query {
-		if len(values) > 0 {
-			options.Args = append(options.Args, fmt.Sprintf("%s=%s", key, values[0]))
-		}
-	}
+	queryString := map[string]interface{}{}
+	headers := map[string]interface{}{}
 
-	// Extract Authorization header if present
-	authHeader := r.Header.Get("Authorization")
-	if authHeader != "" {
-		options.Args = append(options.Args, fmt.Sprintf("authorization=%s", authHeader))
+	query := r.URL.Query()
+	if require, ok := route["require"].(map[string]interface{}); ok {
+		// Parse query parameters
+		if qs, ok := require["qs"].([]interface{}); ok {
+			for _, k := range qs {
+				key := k.(string)
+				if query.Has(key) {
+					queryString[key] = query.Get(key)
+				}
+			}
+		}
+
+		// Extract Authorization header if present
+		if hs, ok := require["headers"].([]interface{}); ok {
+			for _, k := range hs {
+				key := k.(string)
+				headers[key] = r.Header.Get(key)
+			}
+		}
 	}
 
 	context := map[string]interface{}{
@@ -60,13 +70,13 @@ func (h *httpTransitions) WorkflowExecutor(workflowPath string, w http.ResponseW
 			"request":  r,
 			"response": w,
 			"method":   r.Method,
-			"headers":  r.Header,
 			"query":    query,
 			"path":     r.URL.Path,
-			"auth":     authHeader,
 			"body":     "",
 			"bodyData": nil,
 		},
+		"qs":      queryString,
+		"headers": headers,
 	}
 
 	for key, value := range options.Context {
@@ -85,24 +95,21 @@ func (h *httpTransitions) WorkflowExecutor(workflowPath string, w http.ResponseW
 		context["http"].(map[string]interface{})["body"] = body
 
 		if len(body) > 0 {
-			var bodyData map[string]interface{}
-			if err := json.Unmarshal(body, &bodyData); err != nil {
+			var jsonBody map[string]interface{}
+			if err := json.Unmarshal(body, &jsonBody); err != nil {
 				respondError(w, "Invalid JSON in request body", http.StatusBadRequest)
 				result.Success = false
 				result.Error = err
 				return
 			}
-			context["http"].(map[string]interface{})["bodyData"] = bodyData
-
-			// Merge body data into args
-			for key, value := range bodyData {
-				options.Args = append(options.Args, fmt.Sprintf("%s=%s", key, value))
-			}
+			context["json"] = jsonBody
 		}
 	}
 
 	// Execute the workflow
-	workflowPath = filepath.Join(h.workflowsPath, workflowPath)
+	if !strings.HasPrefix(workflowPath, "@") {
+		workflowPath = filepath.Join(h.workflowsPath, workflowPath)
+	}
 	responses := engine.RunWorkflow("production", &domain.Options{
 		EngineName:    "kapi-api",
 		ConfigName:    "http",
@@ -216,21 +223,24 @@ func (h *httpTransitions) RegisterRoutes(modulesPath, workflowsPath, version, bu
 	h.version = version
 	h.buildTime = buildTime
 
+	var lastPath string
 	// Define routes mapped to WSL workflows
 	// Register each route with its workflow
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Failed to register route:", lastPath)
+			panic(r)
+		}
+	}()
 	for path, routes := range groups {
-		defer func() {
-			if r := recover(); r != nil {
-				fmt.Println("Failed to register route:", path)
-				panic(r)
-			}
-		}()
+		lastPath = path
 		http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 			var workflowPath string
 			var method string
 			found := false
+			var route map[string]interface{}
 			for _, routeMap := range routes.([]interface{}) {
-				route := routeMap.(map[string]interface{})
+				route = routeMap.(map[string]interface{})
 				if route["method"] == r.Method {
 					found = true
 					method = route["method"].(string)
@@ -244,7 +254,7 @@ func (h *httpTransitions) RegisterRoutes(modulesPath, workflowsPath, version, bu
 				return
 			}
 			fmt.Println("Handle route:", method, path, "→", workflowPath)
-			h.WorkflowExecutor(workflowPath, w, r)
+			h.WorkflowExecutor(workflowPath, w, r, route)
 		})
 	}
 
@@ -255,7 +265,7 @@ func (h *httpTransitions) RegisterRoutes(modulesPath, workflowsPath, version, bu
 	for path, routes := range groups {
 		for _, route := range routes.([]interface{}) {
 			workflowName := route.(map[string]interface{})["workflow"].(string)
-			workflowNamePath := filepath.Join(workflowsPath, workflowName)
+			workflowNamePath := workflowName
 			f, err := h.Ctx.Engine.GetWorkflowFilePath(workflowNamePath)
 			if err != nil {
 				fmt.Println("Failed to get workflow file path:", err)

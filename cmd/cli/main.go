@@ -6,6 +6,7 @@ import (
 	"os"
 
 	stdCoreModules "github.com/kuetix/std-core/modules"
+	http "github.com/kuetix/std-http"
 	stdHttpModules "github.com/kuetix/std-http/modules"
 
 	"github.com/kuetix/engine"
@@ -34,23 +35,29 @@ func main() {
 
 	verboseMode := *verbose || *vFlag
 
+	if BuildTime == "" {
+		BuildTime = "unknown"
+	}
+
 	response := engine.RunWorkflow("production", &domain.Options{
-		Version:       Version,
-		BuildTime:     BuildTime,
-		EngineName:    "http-cli",
-		ConfigName:    "engine",
-		Verbose:       verboseMode,
-		Quiet:         false,
-		Amount:        1,
-		Retry:         1,
-		RetryDelay:    0,
-		RestartPolicy: "on-failure",
-		Workflow:      workflow,
-		LogPath:       "stdout",
-		Config:        &domain.Config{},
-		Args:          flag.Args(),
-		Context:       nil,
-		Settings:      nil,
+		Version:         Version,
+		BuildTime:       BuildTime,
+		EngineName:      "http-cli",
+		ConfigName:      "engine",
+		Verbose:         verboseMode,
+		Quiet:           false,
+		Amount:          1,
+		Retry:           1,
+		RetryDelay:      0,
+		RestartPolicy:   "stop",
+		Workflow:        workflow,
+		LogPath:         "stdout",
+		Config:          &domain.Config{},
+		Args:            flag.Args(),
+		Context:         nil,
+		Settings:        nil,
+		EmbedFS:         &http.WorkflowsFS,
+		EmbedFSRootPath: http.WorkflowsFSPath,
 	})
 
 	for _, res := range response {

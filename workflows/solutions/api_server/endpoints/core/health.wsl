@@ -5,6 +5,7 @@ workflow health {
     // Return health status
     action services/common/response.Response(
       value: {
+        message: "<<qs.message ?? json.message ?? 'none'>>",
         status: "healthy",
         service: "kapi",
         version: $args.version,

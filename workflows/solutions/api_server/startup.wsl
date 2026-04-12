@@ -17,19 +17,19 @@ workflow startup {
       modulesPath: $env.Config.application.modules_path,
       workflowsPath: $env.Config.application.workflows_path,
       version: $env.Config.application.version,
-      buildTime: $env.Config.application.buildTime,
+      buildTime: $env.Config.application.buildTime??"unknown",
       groups: $routes
     ) as RouteResult
     on success -> StartServer
-    on failure -> Failed
+    on fail -> Failed
   }
 
   state StartServer {
     action api/http/http.StartServer(
-      port: $args.port
+      port: $args.port??"9999"
     ) as ServerResult
     on success -> Running
-    on failure -> Failed
+    on fail -> Failed
   }
 
   state Running {
