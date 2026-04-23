@@ -217,6 +217,7 @@ func (h *httpTransitions) SetupCORS() (r domain.FlowStepResult) {
 	return
 }
 
+// RegisterRoutes registers HTTP routes for WSL workflows
 func (h *httpTransitions) RegisterRoutes(modulesPath, workflowsPath, version, buildTime string, groups map[string]interface{}) (result domain.FlowStepResult) {
 	h.modulesPath = modulesPath
 	h.workflowsPath = workflowsPath
@@ -232,32 +233,31 @@ func (h *httpTransitions) RegisterRoutes(modulesPath, workflowsPath, version, bu
 			panic(r)
 		}
 	}()
+
 	for path, routes := range groups {
 		lastPath = path
-		http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
-			var workflowPath string
-			var method string
-			found := false
-			var route map[string]interface{}
-			for _, routeMap := range routes.([]interface{}) {
-				route = routeMap.(map[string]interface{})
-				if route["method"] == r.Method {
-					found = true
-					method = route["method"].(string)
-					workflowPath = route["workflow"].(string)
-					break
-				}
-			}
-			if !found {
-				fmt.Println("No matching route found for:", r.Method, path)
-				respondError(w, "No matching route found", http.StatusNotFound)
-				return
-			}
-			fmt.Println("Handle route:", method, path, "→", workflowPath)
-			h.WorkflowExecutor(workflowPath, w, r, route)
-		})
+		http.HandleFunc(path, h.handleRequestFunc(routes, path))
 	}
 
+	routesCount, err := h.checkRequests(groups)
+	if err != nil {
+		result.Success = false
+		result.Error = err
+
+		return
+	}
+
+	result.Success = true
+	result.Response = map[string]interface{}{
+		"message":    "Routes registered successfully",
+		"routeCount": routesCount,
+		"allWSL":     true,
+	}
+
+	return
+}
+
+func (h *httpTransitions) checkRequests(groups map[string]interface{}) (int, error) {
 	// Log registered routes
 	fmt.Println("\nAPI routes registered successfully (all routes execute WSL workflows):")
 	fmt.Println("\nAll endpoints:")
@@ -269,7 +269,7 @@ func (h *httpTransitions) RegisterRoutes(modulesPath, workflowsPath, version, bu
 			f, err := h.Ctx.Engine.GetWorkflowFilePath(workflowNamePath)
 			if err != nil {
 				fmt.Println("Failed to get workflow file path:", err)
-				return
+				return -1, err
 			}
 
 			routesCount++
@@ -277,13 +277,33 @@ func (h *httpTransitions) RegisterRoutes(modulesPath, workflowsPath, version, bu
 		}
 	}
 
-	result.Success = true
-	result.Response = map[string]interface{}{
-		"message":    "Routes registered successfully",
-		"routeCount": routesCount,
-		"allWSL":     true,
+	return routesCount, nil
+}
+
+// handleRequestFunc handles HTTP requests for registered routes
+func (h *httpTransitions) handleRequestFunc(routes interface{}, path string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var workflowPath string
+		var method string
+		found := false
+		var route map[string]interface{}
+		for _, routeMap := range routes.([]interface{}) {
+			route = routeMap.(map[string]interface{})
+			if route["method"] == r.Method {
+				found = true
+				method = route["method"].(string)
+				workflowPath = route["workflow"].(string)
+				break
+			}
+		}
+		if !found {
+			fmt.Println("No matching route found for:", r.Method, path)
+			respondError(w, "No matching route found", http.StatusNotFound)
+			return
+		}
+		fmt.Println("Handle route:", method, path, "→", workflowPath)
+		h.WorkflowExecutor(workflowPath, w, r, route)
 	}
-	return
 }
 
 // StartServer starts the HTTP server
