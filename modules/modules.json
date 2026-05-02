@@ -1,6 +1,7 @@
 {
   "api/http/http": {
     "info": {
+      "go_module": "github.com/kuetix/std-http",
       "namespace": "api/http",
       "class": "http",
       "label": "Http Module",
@@ -14,6 +15,9 @@
         "types": "AFileResponse(string, string, string) domain.FlowStepResult",
         "description": "Function with 3 input(s) and 1 output(s)",
         "method": {
+          "go_module": "github.com/kuetix/std-http",
+          "file_path": "modules/api/http/transitions/http.go",
+          "module_path": "modules",
           "namespace": "api/http",
           "class": "http",
           "name": "AFileResponse",
@@ -45,6 +49,9 @@
         "types": "WorkflowExecutor(string, http.ResponseWriter, *http.Request, map[string]interface{}) domain.FlowStepResult",
         "description": "Function with 4 input(s) and 1 output(s)",
         "method": {
+          "go_module": "github.com/kuetix/std-http",
+          "file_path": "modules/api/http/transitions/http.go",
+          "module_path": "modules",
           "namespace": "api/http",
           "class": "http",
           "name": "WorkflowExecutor",
@@ -78,6 +85,9 @@
         "types": "SetupCORS() domain.FlowStepResult",
         "description": "Function with 0 input(s) and 1 output(s)",
         "method": {
+          "go_module": "github.com/kuetix/std-http",
+          "file_path": "modules/api/http/transitions/http.go",
+          "module_path": "modules",
           "namespace": "api/http",
           "class": "http",
           "name": "SetupCORS",
@@ -101,6 +111,9 @@
         "types": "RegisterRoutes(string, string, string, string, map[string]interface{}) domain.FlowStepResult",
         "description": "Function with 5 input(s) and 1 output(s)",
         "method": {
+          "go_module": "github.com/kuetix/std-http",
+          "file_path": "modules/api/http/transitions/http.go",
+          "module_path": "modules",
           "namespace": "api/http",
           "class": "http",
           "name": "RegisterRoutes",
@@ -136,6 +149,9 @@
         "types": "StartServer(string) domain.FlowStepResult",
         "description": "Function with 1 input(s) and 1 output(s)",
         "method": {
+          "go_module": "github.com/kuetix/std-http",
+          "file_path": "modules/api/http/transitions/http.go",
+          "module_path": "modules",
           "namespace": "api/http",
           "class": "http",
           "name": "StartServer",
@@ -163,6 +179,9 @@
         "types": "AFileResponse(string, string, string) domain.FlowStepResult",
         "description": "Function with 3 input(s) and 1 output(s)",
         "method": {
+          "go_module": "github.com/kuetix/std-http",
+          "file_path": "modules/api/http/transitions/http.go",
+          "module_path": "modules",
           "namespace": "api/http",
           "class": "http",
           "name": "AFileResponse",
@@ -194,6 +213,9 @@
         "types": "RegisterRoutes(string, string, string, string, map[string]interface{}) domain.FlowStepResult",
         "description": "Function with 5 input(s) and 1 output(s)",
         "method": {
+          "go_module": "github.com/kuetix/std-http",
+          "file_path": "modules/api/http/transitions/http.go",
+          "module_path": "modules",
           "namespace": "api/http",
           "class": "http",
           "name": "RegisterRoutes",
@@ -229,6 +251,9 @@
         "types": "SetupCORS() domain.FlowStepResult",
         "description": "Function with 0 input(s) and 1 output(s)",
         "method": {
+          "go_module": "github.com/kuetix/std-http",
+          "file_path": "modules/api/http/transitions/http.go",
+          "module_path": "modules",
           "namespace": "api/http",
           "class": "http",
           "name": "SetupCORS",
@@ -252,6 +277,9 @@
         "types": "StartServer(string) domain.FlowStepResult",
         "description": "Function with 1 input(s) and 1 output(s)",
         "method": {
+          "go_module": "github.com/kuetix/std-http",
+          "file_path": "modules/api/http/transitions/http.go",
+          "module_path": "modules",
           "namespace": "api/http",
           "class": "http",
           "name": "StartServer",
@@ -279,6 +307,9 @@
         "types": "WorkflowExecutor(string, http.ResponseWriter, *http.Request, map[string]interface{}) domain.FlowStepResult",
         "description": "Function with 4 input(s) and 1 output(s)",
         "method": {
+          "go_module": "github.com/kuetix/std-http",
+          "file_path": "modules/api/http/transitions/http.go",
+          "module_path": "modules",
           "namespace": "api/http",
           "class": "http",
           "name": "WorkflowExecutor",
