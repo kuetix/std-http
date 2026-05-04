@@ -10,20 +10,6 @@ func init() {
 	boot.AddMetaFunctionCache(map[string]map[string]map[string]interfaces.FunctionMetadata{
 		"api/http": {
 			"http": {
-				"AFileResponse": {
-					GoModule:    "github.com/kuetix/std-http",
-					ModulePath:  "modules",
-					FilePath:    "modules/api/http/transitions/http.go",
-					Namespace:   "http",
-					Class:       "api/http",
-					Name:        "AFileResponse",
-					NumIn:       3,
-					NumOut:      1,
-					ArgTypes:    []string{"string", "string", "string"},
-					ReturnTypes: []string{"domain.FlowStepResult"},
-					ArgNames:    []string{"path", "contentType", "cacheControl"},
-					ReturnNames: []string{"result"},
-				},
 				"WorkflowExecutor": {
 					GoModule:    "github.com/kuetix/std-http",
 					ModulePath:  "modules",
@@ -78,6 +64,20 @@ func init() {
 					ArgTypes:    []string{"string"},
 					ReturnTypes: []string{"domain.FlowStepResult"},
 					ArgNames:    []string{"port"},
+					ReturnNames: []string{"result"},
+				},
+				"AFileResponse": {
+					GoModule:    "github.com/kuetix/std-http",
+					ModulePath:  "modules",
+					FilePath:    "modules/api/http/transitions/http.go",
+					Namespace:   "http",
+					Class:       "api/http",
+					Name:        "AFileResponse",
+					NumIn:       3,
+					NumOut:      1,
+					ArgTypes:    []string{"string", "string", "string"},
+					ReturnTypes: []string{"domain.FlowStepResult"},
+					ArgNames:    []string{"path", "contentType", "cacheControl"},
 					ReturnNames: []string{"result"},
 				},
 			},

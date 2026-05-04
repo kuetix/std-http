@@ -15,6 +15,20 @@ const {
                 "require": {"json": ["message"], "headers": ["Authorization"]}
             },
         ],
+        "/health/{name}": [
+            {
+                "method": "GET",
+                "workflow": "@solutions/api_server/endpoints/core/health",
+                "description": "GET Health check endpoint",
+                "require": {"qs": ["message"], "headers": ["Authorization"], "url": ["name"]}
+            },
+            {
+                "method": "POST",
+                "workflow": "@solutions/api_server/endpoints/core/health",
+                "description": "POST Health check endpoint",
+                "require": {"json": ["message"], "headers": ["Authorization"], "url": ["name"]}
+            },
+        ],
     }
 }
 

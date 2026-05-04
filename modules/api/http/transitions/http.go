@@ -41,11 +41,18 @@ func (h *httpTransitions) WorkflowExecutor(workflowPath string, w http.ResponseW
 		fmt.Sprintf("buildTime=%s", h.buildTime),
 	}
 
+	urlString := map[string]interface{}{}
 	queryString := map[string]interface{}{}
 	headers := map[string]interface{}{}
 
 	query := r.URL.Query()
 	if require, ok := route["require"].(map[string]interface{}); ok {
+		if url, ok := require["url"].([]interface{}); ok {
+			for _, pattern := range url {
+				urlString[pattern.(string)] = r.PathValue(pattern.(string))
+			}
+		}
+
 		// Parse query parameters
 		if qs, ok := require["qs"].([]interface{}); ok {
 			for _, k := range qs {
@@ -77,6 +84,8 @@ func (h *httpTransitions) WorkflowExecutor(workflowPath string, w http.ResponseW
 		},
 		"qs":      queryString,
 		"headers": headers,
+		"url":     urlString,
+		"values":  urlString,
 	}
 
 	for key, value := range options.Context {
