@@ -1,4 +1,11 @@
 const {
+    cors: {
+        "AllowedMethods":   ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        "AllowedHeaders":   ["Origin", "Content-Type", "Authorization", "sentry-trace", "baggage", "X-Requested-With", "Accept"],
+        "ExposedHeaders":   ["Content-Length"],
+        "AllowCredentials": true,
+        "MaxAge":           12,
+    },
     routes: {
         // Core endpoints
         "/health": [

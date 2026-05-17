@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -209,17 +210,114 @@ func (h *httpTransitions) WorkflowExecutor(workflowPath string, w http.ResponseW
 }
 
 // SetupCORS returns a CORS handler
-func (h *httpTransitions) SetupCORS() (r domain.FlowStepResult) {
-	c := cors.New(cors.Options{
-		// AllowOrigins: []string{url},
-		AllowedOrigins:   []string{"http://localhost:5173"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Origin", "Content-Type", "Authorization", "sentry-trace", "baggage", "X-Requested-With", "Accept"},
-		ExposedHeaders:   []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           int(12 * time.Hour),
-	})
+func (h *httpTransitions) SetupCORS(options map[string]interface{}) (r domain.FlowStepResult) {
+	keys := map[string]interface{}{
+		"AllowedOrigins":       true,
+		"AllowedMethods":       true,
+		"AllowedHeaders":       true,
+		"ExposedHeaders":       true,
+		"MaxAge":               true,
+		"AllowCredentials":     true,
+		"AllowPrivateNetwork":  true,
+		"OptionsPassthrough":   true,
+		"OptionsSuccessStatus": true,
+		"Debug":                true,
+	}
+	if o, ok := options["options"]; ok {
+		options = o.(map[string]interface{})
+	}
+	opts := cors.Options{}
+	for name, value := range options {
+		if _, ok := keys[name]; ok {
+			fmt.Printf("[CORS] %s: %v\n", name, value)
+			switch name {
+			case "AllowedOrigins":
+				if s, k := value.(string); k {
+					opts.AllowedOrigins = strings.Split(s, ",")
+				} else if v, k := value.([]string); k {
+					opts.AllowedOrigins = v
+				} else if v, k := value.([]interface{}); k {
+					for i := range v {
+						opts.AllowedOrigins = append(opts.AllowedOrigins, fmt.Sprintf("%v", v[i]))
+					}
+				}
+			case "AllowedMethods":
+				if s, k := value.(string); k {
+					opts.AllowedMethods = strings.Split(s, ",")
+				} else if v, k := value.([]string); k {
+					opts.AllowedMethods = v
+				} else if v, k := value.([]interface{}); k {
+					for i := range v {
+						opts.AllowedMethods = append(opts.AllowedMethods, fmt.Sprintf("%v", v[i]))
+					}
+				}
+			case "AllowedHeaders":
+				if s, k := value.(string); k {
+					opts.AllowedHeaders = strings.Split(s, ",")
+				} else if v, k := value.([]string); k {
+					opts.AllowedHeaders = v
+				} else if v, k := value.([]interface{}); k {
+					for i := range v {
+						opts.AllowedHeaders = append(opts.AllowedHeaders, fmt.Sprintf("%v", v[i]))
+					}
+				}
+			case "ExposedHeaders":
+				if s, k := value.(string); k {
+					opts.ExposedHeaders = strings.Split(s, ",")
+				} else if v, k := value.([]string); k {
+					opts.ExposedHeaders = v
+				} else if v, k := value.([]interface{}); k {
+					for i := range v {
+						opts.ExposedHeaders = append(opts.ExposedHeaders, fmt.Sprintf("%v", v[i]))
+					}
+				}
+			case "MaxAge":
+				// Convert to int
+				if s, k := value.(string); k {
+					vint, _ := strconv.Atoi(s)
+					opts.MaxAge = int(time.Duration(vint) * time.Hour)
+				} else if vint, k := value.(int); k {
+					opts.MaxAge = int(time.Duration(vint) * time.Hour)
+				}
+			case "AllowCredentials":
+				// Convert to bool
+				opts.AllowCredentials = value == "true"
+			case "AllowPrivateNetwork":
+				// Convert to bool
+				opts.AllowPrivateNetwork = value == "true"
+			case "OptionsPassthrough":
+				// Convert to bool
+				opts.OptionsPassthrough = value == "true"
+			case "OptionsSuccessStatus":
+				// Convert to int
+				if s, k := value.(string); k {
+					vint, _ := strconv.Atoi(s)
+					opts.OptionsSuccessStatus = int(time.Duration(vint) * time.Second)
+				} else if vint, k := value.(int); k {
+					opts.OptionsSuccessStatus = int(time.Duration(vint) * time.Second)
+				}
+			case "Debug":
+				// Convert to bool
+				if s, k := value.(string); k {
+					opts.Debug = s == "true"
+				} else if b, k := value.(bool); k {
+					opts.Debug = b
+				}
+			}
+		}
+	}
+	c := cors.New(opts)
 
+	//c := cors.New(cors.Options{
+	//	//AllowedOrigins: []string{req.URL.String()},
+	//	//AllowedOrigins:   []string{"http://localhost:5173"},
+	//	AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+	//	AllowedHeaders:   []string{"Origin", "Content-Type", "Authorization", "sentry-trace", "baggage", "X-Requested-With", "Accept"},
+	//	ExposedHeaders:   []string{"Content-Length"},
+	//	AllowCredentials: true,
+	//	MaxAge:           int(12 * time.Hour),
+	//})
+	//
 	h.SetValue("CORS", c)
 	r.Success = true
 	r.Response = c

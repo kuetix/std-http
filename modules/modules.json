@@ -80,10 +80,10 @@
       },
       {
         "value": "SetupCORS",
-        "label": "SetupCORS() (r domain.FlowStepResult)",
-        "names": "SetupCORS() r",
-        "types": "SetupCORS() domain.FlowStepResult",
-        "description": "Function with 0 input(s) and 1 output(s)",
+        "label": "SetupCORS(options map[string]interface{}) (r domain.FlowStepResult)",
+        "names": "SetupCORS(options) r",
+        "types": "SetupCORS(map[string]interface{}) domain.FlowStepResult",
+        "description": "Function with 1 input(s) and 1 output(s)",
         "method": {
           "go_module": "github.com/kuetix/std-http",
           "file_path": "modules/api/http/transitions/http.go",
@@ -92,13 +92,17 @@
           "class": "http",
           "name": "SetupCORS",
           "receiver_type": "*httpTransitions",
-          "num_in": 0,
+          "num_in": 1,
           "num_out": 1,
-          "arg_types": null,
+          "arg_types": [
+            "map[string]interface{}"
+          ],
           "return_types": [
             "domain.FlowStepResult"
           ],
-          "arg_names": null,
+          "arg_names": [
+            "options"
+          ],
           "return_names": [
             "r"
           ]
@@ -246,10 +250,10 @@
       },
       {
         "value": "SetupCORS",
-        "label": "SetupCORS() (r domain.FlowStepResult)",
-        "names": "SetupCORS() r",
-        "types": "SetupCORS() domain.FlowStepResult",
-        "description": "Function with 0 input(s) and 1 output(s)",
+        "label": "SetupCORS(options map[string]interface{}) (r domain.FlowStepResult)",
+        "names": "SetupCORS(options) r",
+        "types": "SetupCORS(map[string]interface{}) domain.FlowStepResult",
+        "description": "Function with 1 input(s) and 1 output(s)",
         "method": {
           "go_module": "github.com/kuetix/std-http",
           "file_path": "modules/api/http/transitions/http.go",
@@ -258,13 +262,17 @@
           "class": "http",
           "name": "SetupCORS",
           "receiver_type": "*httpTransitions",
-          "num_in": 0,
+          "num_in": 1,
           "num_out": 1,
-          "arg_types": null,
+          "arg_types": [
+            "map[string]interface{}"
+          ],
           "return_types": [
             "domain.FlowStepResult"
           ],
-          "arg_names": null,
+          "arg_names": [
+            "options"
+          ],
           "return_names": [
             "r"
           ]

@@ -7,7 +7,13 @@ workflow startup {
   start: SetupCORS
 
   state SetupCORS {
-    action api/http/http.SetupCORS() as CORSResult
+    action api/http/http.SetupCORS(options: {
+      AllowedMethods:   ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      AllowedHeaders:   ["Origin", "Content-Type", "Authorization", "sentry-trace", "baggage", "X-Requested-With", "Accept"],
+      ExposedHeaders:   ["Content-Length"],
+      AllowCredentials: true,
+      MaxAge:           12,
+    }) as CORSResult
     on success -> RegisterRoutes
     on fail -> Failed
   }
