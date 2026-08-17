@@ -13,6 +13,12 @@ func respondJson(w http.ResponseWriter, sr StandardResponse, headers map[string]
 		w.Header().Set(k, v)
 	}
 
+	// A workflow may finish without any transition setting a status code
+	// (it stays 0); WriteHeader panics below 100.
+	if statusCode < 100 {
+		statusCode = http.StatusInternalServerError
+	}
+
 	w.WriteHeader(statusCode)
 	encoder := json.NewEncoder(w)
 	encoder.SetEscapeHTML(false)

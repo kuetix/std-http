@@ -93,8 +93,9 @@ func (h *httpTransitions) WorkflowExecutor(workflowPath string, w http.ResponseW
 		context[key] = value
 	}
 
-	// Parse JSON body for POST/PUT requests
-	if r.Method == http.MethodPost || r.Method == http.MethodPut {
+	// Parse JSON body for POST/PUT/DELETE requests (clients may send a JSON
+	// body with DELETE, e.g. pkg.kuetix.com's removePackage)
+	if r.Method == http.MethodPost || r.Method == http.MethodPut || r.Method == http.MethodDelete {
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			respondError(w, "Failed to read request body", http.StatusBadRequest)
