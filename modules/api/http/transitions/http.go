@@ -186,6 +186,24 @@ func (h *httpTransitions) WorkflowExecutor(workflowPath string, w http.ResponseW
 		return
 	}
 
+	// A workflow signals a client-facing failure with a terminal
+	//   action services/common/response.Response(value: {error: "..."}, statusCode: 4xx)
+	// state - the engine-idiomatic error terminal (response.ResponseError as
+	// a terminal action degrades to a generic 500 in this engine). That path
+	// leaves response.Error nil and only sets StatusCode + an {error: ...}
+	// body, so IsSuccess() is true and the server would otherwise answer HTTP
+	// 200 for every business error. Honor a >= 400 status code the workflow
+	// deliberately set: same JSON envelope, correct HTTP status.
+	if sc := response.StatusCode; sc >= 400 {
+		respondJson(w, StandardResponse{Success: false, Data: response.Response}, nil, sc)
+		result.StatusCode = sc
+		result.Success = false
+		if response.Error != nil {
+			result.Error = response.Error
+		}
+		return
+	}
+
 	// Extract response from workflow result
 	if response.Response != nil {
 		// Check if the response is a file
