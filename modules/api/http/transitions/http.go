@@ -1,28 +1,40 @@
 package transitions
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"os/signal"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/kuetix/engine"
 	"github.com/kuetix/engine/engine/domain"
 	"github.com/kuetix/engine/engine/domain/interfaces"
 	"github.com/kuetix/engine/engine/workflow"
+	"github.com/kuetix/std-http/httplog"
 	"github.com/rs/cors"
 )
 
+// ServerHandlerWrapper, if set before StartServer runs, wraps the final HTTP
+// handler (after CORS, after the built-in httplog middleware). A binary can
+// point this at its own middleware without forking std-http.
+var ServerHandlerWrapper func(http.Handler) http.Handler
+
 type httpTransitions struct {
 	workflow.BaseServiceTransition
-	modulesPath   string
-	workflowsPath string
-	version       string
-	buildTime     string
+	modulesPath      string
+	workflowsPath    string
+	version          string
+	buildTime        string
+	notFoundWorkflow string
 }
 
 func NewHTTPTransitions() interfaces.ServiceTransitions {
@@ -343,6 +355,28 @@ func (h *httpTransitions) SetupCORS(options map[string]interface{}) (r domain.Fl
 	return
 }
 
+// SetNotFoundWorkflow optionally names a WSL workflow to run for requests
+// that don't match any registered route - either a request to a registered
+// path pattern whose method has no route entry, or a request to a path that
+// matches no registered pattern at all. Skip calling this to keep the
+// built-in plain "No matching route found" 404.
+//
+// Call it once from a startup workflow, BEFORE RegisterRoutes - like
+// SetupCORS, it stashes state on this shared service-transition instance for
+// a later step to consume, and RegisterRoutes only wires up the
+// unmatched-path catch-all (see its own comment) when this has already run.
+// The named workflow executes through the normal WorkflowExecutor path, so
+// it controls its own response the same way any route workflow does, via a
+// services/common/response.Response(value: ..., statusCode: 404) terminal.
+func (h *httpTransitions) SetNotFoundWorkflow(workflowPath string) (result domain.FlowStepResult) {
+	h.notFoundWorkflow = workflowPath
+	result.Success = true
+	result.Response = map[string]interface{}{
+		"notFoundWorkflow": workflowPath,
+	}
+	return
+}
+
 // RegisterRoutes registers HTTP routes for WSL workflows
 func (h *httpTransitions) RegisterRoutes(modulesPath, workflowsPath, version, buildTime string, groups map[string]interface{}) (result domain.FlowStepResult) {
 	h.modulesPath = modulesPath
@@ -363,6 +397,21 @@ func (h *httpTransitions) RegisterRoutes(modulesPath, workflowsPath, version, bu
 	for path, routes := range groups {
 		lastPath = path
 		http.HandleFunc(path, h.handleRequestFunc(routes, path))
+	}
+
+	// "/" is a subtree pattern in Go's ServeMux (net/http, Go 1.22+ routing):
+	// it matches any path a more specific registered pattern doesn't, so it
+	// doubles as a catch-all for paths outside every group above. Only add
+	// it when SetNotFoundWorkflow already ran (nothing to hand unmatched
+	// requests to otherwise) and no group already owns "/" itself -
+	// registering the same pattern twice panics.
+	if h.notFoundWorkflow != "" {
+		if _, exists := groups["/"]; !exists {
+			lastPath = "/"
+			http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+				h.respondNotFound(w, r)
+			})
+		}
 	}
 
 	routesCount, err := h.checkRequests(groups)
@@ -424,7 +473,7 @@ func (h *httpTransitions) handleRequestFunc(routes interface{}, path string) fun
 		}
 		if !found {
 			fmt.Println("No matching route found for:", r.Method, path)
-			respondError(w, "No matching route found", http.StatusNotFound)
+			h.respondNotFound(w, r)
 			return
 		}
 		fmt.Println("Handle route:", method, path, "→", workflowPath)
@@ -432,26 +481,122 @@ func (h *httpTransitions) handleRequestFunc(routes interface{}, path string) fun
 	}
 }
 
-// StartServer starts the HTTP server
+// respondNotFound answers an unmatched request: SetNotFoundWorkflow's
+// workflow if one was set (run through the same WorkflowExecutor path as any
+// route, with an empty route map - there's no route-level "require" to pull
+// url/qs/headers from, but $http.path/$http.method/$http.query are always
+// present in a workflow's context), otherwise the built-in plain 404.
+func (h *httpTransitions) respondNotFound(w http.ResponseWriter, r *http.Request) {
+	if h.notFoundWorkflow != "" {
+		h.WorkflowExecutor(h.notFoundWorkflow, w, r, map[string]interface{}{})
+		return
+	}
+	respondError(w, "No matching route found", http.StatusNotFound)
+}
+
+// StartServer starts the HTTP server. It:
+//
+//   - records every request/response to a rotating JSON log when
+//     HTTP_LOG_ENABLED=true (see the httplog package) and logs the
+//     process's own outbound calls too;
+//
+//   - uses an *http.Server with env-tunable timeouts (HTTP_* below) instead
+//     of the bare http.ListenAndServe defaults;
+//
+//   - shuts down gracefully on SIGINT / SIGTERM, draining in-flight
+//     requests for up to HTTP_SHUTDOWN_TIMEOUT.
+//
+//     HTTP_READ_HEADER_TIMEOUT   default 10s
+//     HTTP_READ_TIMEOUT          default 30s   (0 disables)
+//     HTTP_WRITE_TIMEOUT         default 60s   (0 disables)
+//     HTTP_IDLE_TIMEOUT          default 120s
+//     HTTP_MAX_HEADER_BYTES      default 1048576
+//     HTTP_SHUTDOWN_TIMEOUT      default 20s
 func (h *httpTransitions) StartServer(port string) (result domain.FlowStepResult) {
+	httplog.Init()
+	httplog.WrapDefaultTransport()
+
 	addr := fmt.Sprintf(":%s", port)
 	fmt.Printf("\nStarting API server on %s\n", addr)
 	fmt.Printf("Modules path: %s\n", h.modulesPath)
 	fmt.Printf("Workflows path: %s\n", h.workflowsPath)
+	if httplog.Enabled() {
+		fmt.Printf("HTTP transaction logging: enabled\n")
+	}
 	fmt.Printf("All endpoints are now executing WSL workflows!\n\n")
 
 	cRaw := h.GetValue("CORS")
 	c := cRaw.(*cors.Cors)
 
-	err := http.ListenAndServe(addr, c.Handler(http.DefaultServeMux))
-	if err != nil {
+	var handler http.Handler = c.Handler(http.DefaultServeMux)
+	handler = httplog.Middleware(handler) // no-op passthrough when disabled
+	if ServerHandlerWrapper != nil {
+		handler = ServerHandlerWrapper(handler)
+	}
+
+	srv := &http.Server{
+		Addr:              addr,
+		Handler:           handler,
+		ReadHeaderTimeout: envDuration("HTTP_READ_HEADER_TIMEOUT", 10*time.Second),
+		ReadTimeout:       envDuration("HTTP_READ_TIMEOUT", 30*time.Second),
+		WriteTimeout:      envDuration("HTTP_WRITE_TIMEOUT", 60*time.Second),
+		IdleTimeout:       envDuration("HTTP_IDLE_TIMEOUT", 120*time.Second),
+		MaxHeaderBytes:    envInt("HTTP_MAX_HEADER_BYTES", 1<<20),
+	}
+
+	// Graceful shutdown: SIGINT/SIGTERM stops accepting new connections and
+	// drains in-flight requests, then ListenAndServe returns ErrServerClosed.
+	shutdownDone := make(chan struct{})
+	go func() {
+		sig := make(chan os.Signal, 1)
+		signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+		<-sig
+		fmt.Println("\nShutting down HTTP server (draining in-flight requests)...")
+		ctx, cancel := context.WithTimeout(context.Background(), envDuration("HTTP_SHUTDOWN_TIMEOUT", 20*time.Second))
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			fmt.Printf("HTTP server shutdown error: %v\n", err)
+		}
+		httplog.Close()
+		close(shutdownDone)
+	}()
+
+	err := srv.ListenAndServe()
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		result.Success = false
 		result.Error = fmt.Errorf("failed to start server: %w", err)
 		return
 	}
+	if errors.Is(err, http.ErrServerClosed) {
+		<-shutdownDone
+	}
 
 	result.Success = true
 	return
+}
+
+func envInt(key string, def int) int {
+	if v := strings.TrimSpace(os.Getenv(key)); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			return n
+		}
+	}
+	return def
+}
+
+func envDuration(key string, def time.Duration) time.Duration {
+	v := strings.TrimSpace(os.Getenv(key))
+	if v == "" {
+		return def
+	}
+	if d, err := time.ParseDuration(v); err == nil {
+		return d
+	}
+	// bare number = seconds
+	if n, err := strconv.Atoi(v); err == nil {
+		return time.Duration(n) * time.Second
+	}
+	return def
 }
 
 // AFileResponse creates a response that serves a file with the specified content type and cache control
