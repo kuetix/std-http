@@ -109,6 +109,36 @@
         }
       },
       {
+        "value": "SetNotFoundWorkflow",
+        "label": "SetNotFoundWorkflow(workflowPath string) (result domain.FlowStepResult)",
+        "names": "SetNotFoundWorkflow(workflowPath) result",
+        "types": "SetNotFoundWorkflow(string) domain.FlowStepResult",
+        "description": "Function with 1 input(s) and 1 output(s)",
+        "method": {
+          "go_module": "github.com/kuetix/std-http",
+          "file_path": "modules/api/http/transitions/http.go",
+          "module_path": "modules",
+          "namespace": "api/http",
+          "class": "http",
+          "name": "SetNotFoundWorkflow",
+          "receiver_type": "*httpTransitions",
+          "num_in": 1,
+          "num_out": 1,
+          "arg_types": [
+            "string"
+          ],
+          "return_types": [
+            "domain.FlowStepResult"
+          ],
+          "arg_names": [
+            "workflowPath"
+          ],
+          "return_names": [
+            "result"
+          ]
+        }
+      },
+      {
         "value": "RegisterRoutes",
         "label": "RegisterRoutes(modulesPath string, workflowsPath string, version string, buildTime string, groups map[string]interface{}) (result domain.FlowStepResult)",
         "names": "RegisterRoutes(modulesPath, workflowsPath, version, buildTime, groups) result",
@@ -242,6 +272,36 @@
             "version",
             "buildTime",
             "groups"
+          ],
+          "return_names": [
+            "result"
+          ]
+        }
+      },
+      {
+        "value": "SetNotFoundWorkflow",
+        "label": "SetNotFoundWorkflow(workflowPath string) (result domain.FlowStepResult)",
+        "names": "SetNotFoundWorkflow(workflowPath) result",
+        "types": "SetNotFoundWorkflow(string) domain.FlowStepResult",
+        "description": "Function with 1 input(s) and 1 output(s)",
+        "method": {
+          "go_module": "github.com/kuetix/std-http",
+          "file_path": "modules/api/http/transitions/http.go",
+          "module_path": "modules",
+          "namespace": "api/http",
+          "class": "http",
+          "name": "SetNotFoundWorkflow",
+          "receiver_type": "*httpTransitions",
+          "num_in": 1,
+          "num_out": 1,
+          "arg_types": [
+            "string"
+          ],
+          "return_types": [
+            "domain.FlowStepResult"
+          ],
+          "arg_names": [
+            "workflowPath"
           ],
           "return_names": [
             "result"
