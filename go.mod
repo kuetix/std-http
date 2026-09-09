@@ -4,7 +4,7 @@ go 1.26.1
 
 require (
 	github.com/kuetix/container v0.1.0
-	github.com/kuetix/engine v1.0.0
+	github.com/kuetix/engine v1.2.0
 	github.com/kuetix/std-core v1.0.0
 	github.com/rs/cors v1.11.1
 )
